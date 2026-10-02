@@ -1,9 +1,17 @@
 {
  "next": 8,
- "waves": {},
- "announced": {},
+ "waves": {
+  "1": {
+   "openedAt": 1790951371.268144
+  }
+ },
+ "announced": {
+  "1:open": 1790951371.268144
+ },
  "reminded": {},
  "queue": [],
  "refresh": [],
- "xids": {}
+ "xids": {
+  "1:open": "2106028813788299664"
+ }
 }
