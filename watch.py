@@ -248,9 +248,9 @@ def run(st, c):
     while q and sent < MAX_PINGS and (len(q) >= size or now - min(x['t'] for x in q) >= wait):
         batch = q[:size]
         if len(batch) == 1:
-            b = batch[0]; text = f"just minted .. #{b['i']} · " + ' · '.join(b['bits']) + f"\n{OS_ITEM}{b['i']}"
+            b = batch[0]; text = f"just minted .. #{b['i']}\n" + ' · '.join(b['bits']) + f"\n\nwave {n} · {sold_in}/{WAVE}\n{OS_ITEM}{b['i']}"
         else:
-            text = 'just minted\n' + '\n'.join(f"#{b['i']} · {b['bits'][0]}" for b in batch) + f"\n\n{MINT}\n{OS_ITEM}{batch[-1]['i']}"
+            text = 'just minted\n' + '\n'.join(f"#{b['i']} · {b['bits'][0]}" for b in batch) + f"\n\nwave {n} · {sold_in}/{WAVE}\n{MINT}\n{OS_ITEM}{batch[-1]['i']}"
         publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
                 [b['img'] for b in batch if b.get('img')])   # a main post, so it shows on the profile timeline
         del q[:len(batch)]
