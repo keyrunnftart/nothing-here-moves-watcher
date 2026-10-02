@@ -28,6 +28,8 @@ MINT = 'mint.keyrunnft.art'
 OS_ITEM = f'opensea.io/item/base/{TOKEN}/'
 OS_COLL = 'opensea.io/collection/nothing-here-moves'
 ROUNDUP_N, ROUNDUP_WAIT = 5, 30 * 60
+BYLINE = '"nothing here moves" by keyrun'
+SIG = '[automated message · keybot]'
 MAX_PINGS = 4                    # per run, so a burst can't flood the phone
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(HERE, 'state.json')
@@ -197,24 +199,31 @@ def run(st, c):
             pid = publish(title, text, [st['last_img']] if img and st.get('last_img') else [], link=link)
             ann[key] = now
             if pid: xid[key] = pid
+    # wordings agreed with the artist 2 oct 2026: line 1 = what happened, byline, details, sign-off.
+    # links ($0.20 a post) only on wave open, 10/30, 20/30, sold out, rare pulls and the close.
     if closed:
         post_once('closed', 'nhm: edition closed .. post it',
-                  f"nothing here moves is closed at {c['supply']} editions\n\nthank you to everyone who minted .. the edition is final\n{OS_COLL}")
+                  f"nothing here moves is closed at {c['supply']} editions\n{BYLINE}\n\nthank you to everyone who minted .. secondary on opensea\n{OS_COLL}\n\n{SIG}",
+                  link=True)
     for k in range(1, n + 1):   # one open post per wave (also catches up if a run was missed)
         price = BASE_PRICE + STEP * (k - 1)
         post_once(f'{k}:open', f'nhm: wave {k} is open .. post it',
-                  f"wave {k} is open\n\n{WAVE} editions · {eth(price)} eth · on base\neach one is generated on-chain at mint .. nobody sees it before it lands\n{MINT}",
+                  f"wave {k} is open\n{BYLINE}\n\n{WAVE} editions · {eth(price)} eth · on base\ngenerated on-chain at mint .. nobody sees it before it lands\n{MINT}\n\n{SIG}",
                   link=True, img=False)
     if n:
+        price = BASE_PRICE + STEP * (n - 1)
         for m in (10, 20):
-            if m <= sold_in < WAVE: post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it', f"wave {n} · {sold_in}/{WAVE} minted\n\n{MINT}")
+            if m <= sold_in < WAVE:
+                post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it',
+                          f"wave {n} · {sold_in}/{WAVE} minted\n{BYLINE}\n\n{WAVE - sold_in} left at {eth(price)} eth\n{MINT}\n\n{SIG}", link=True)
         if w.get('soldOutAt'):
             took = dur(w['soldOutAt'] - w['openedAt'])
             if c['supply'] >= c['max']:
-                text = f"wave {n} sold out in {took} .. that was the last one, the edition is complete\nthank you\n{OS_COLL}"
+                text = f"wave {n} sold out in {took} .. that was the last one, the edition is complete\n{BYLINE}\n\nthank you .. secondary on opensea\n{OS_COLL}\n\n{SIG}"
             else:
-                text = f"wave {n} sold out in {took} .. thank you\n\nwave {n + 1} opens {when(w['soldOutAt'] + BREAK_H * 3600)} · {eth(BASE_PRICE + STEP * n)} eth\n{MINT}"
-            post_once(f'{n}:sold', f'nhm: wave {n} sold out .. post it', text)
+                text = (f"wave {n} sold out in {took} .. thank you\n{BYLINE}\n\n"
+                        f"wave {n + 1} opens {when(w['soldOutAt'] + BREAK_H * 3600)} · {eth(BASE_PRICE + STEP * n)} eth\n{MINT}\n\n{SIG}")
+            post_once(f'{n}:sold', f'nhm: wave {n} sold out .. post it', text, link=True)
 
     # new mints → queue (in order; stop at the first render that hasn't landed yet)
     while st['next'] < c['supply']:
@@ -241,16 +250,20 @@ def run(st, c):
         if sent >= MAX_PINGS: break
         pct = '2%' if r['mode'] == 'mono' else '6%'
         publish(f"nhm: rare pull #{r['i']} ({r['mode']}) .. post it",
-                 f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n\n" + ' · '.join(r['bits'][1:]) + f"\n{OS_ITEM}{r['i']}")
+                f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n{BYLINE}\n\n" + ' · '.join(r['bits'][1:]) + f"\n{MINT}\n\n{SIG}",
+                [r['img']] if r.get('img') else [], link=True)
         q.remove(r)
     size = 4 if X_ON else ROUNDUP_N      # x takes at most 4 images a post
     wait = 0 if X_ON else ROUNDUP_WAIT   # auto-posting: every new mint goes out on the next run (≤5-10 min)
     while q and sent < MAX_PINGS and (len(q) >= size or now - min(x['t'] for x in q) >= wait):
         batch = q[:size]
+        tail = f"wave {n} · {sold_in}/{WAVE} · {eth(BASE_PRICE + STEP * (n - 1))} eth · mint link in bio\n\n{SIG}"
         if len(batch) == 1:
-            b = batch[0]; text = f"just minted .. #{b['i']}\n" + ' · '.join(b['bits']) + f"\n\nwave {n} · {sold_in}/{WAVE}\n{OS_ITEM}{b['i']}"
+            b = batch[0]
+            text = f"just minted .. #{b['i']}\n{BYLINE}\n\n" + ' · '.join(b['bits']) + f"\n{tail}"
         else:
-            text = 'just minted\n' + '\n'.join(f"#{b['i']} · {b['bits'][0]}" for b in batch) + f"\n\nwave {n} · {sold_in}/{WAVE}\n{MINT}\n{OS_ITEM}{batch[-1]['i']}"
+            text = (f"just minted .. " + ', '.join(f"#{b['i']}" for b in batch) + f"\n{BYLINE}\n\n"
+                    + ' · '.join(f"#{b['i']} {b['bits'][0]}" for b in batch) + f"\n{tail}")
         publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
                 [b['img'] for b in batch if b.get('img')])   # a main post, so it shows on the profile timeline
         del q[:len(batch)]
