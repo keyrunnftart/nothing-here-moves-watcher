@@ -1,5 +1,5 @@
 {
- "next": 8,
+ "next": 9,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144
@@ -9,9 +9,28 @@
   "1:open": 1790951371.268144
  },
  "reminded": {},
- "queue": [],
- "refresh": [],
+ "queue": [
+  {
+   "i": 8,
+   "mode": "collage",
+   "bits": [
+    "collage",
+    "tunnel",
+    "crimson ice / teal rose",
+    "strong drift"
+   ],
+   "t": 1790951397.2419515,
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/8/image"
+  }
+ ],
+ "refresh": [
+  {
+   "i": 8,
+   "left": 1
+  }
+ ],
  "xids": {
   "1:open": "2106028813788299664"
- }
+ },
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/8/image"
 }
