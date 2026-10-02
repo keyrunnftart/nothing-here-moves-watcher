@@ -60,6 +60,29 @@ def chain():
     configured, _pay, price, alloc, sold = words(rpc_call(MINTER, '0xc6b9f06a' + TOKEN[2:].rjust(64, '0')))
     return {'supply': supply, 'max': mx, 'paused': paused, 'configured': bool(configured), 'price': price / 1e18, 'alloc': alloc, 'sold': sold}
 
+def minter(st, i):
+    """a public display name for the wallet holding #i: opensea username, else ens/basename, else 0x1234…abcd.
+    never an @handle .. keybot doesn't tag people (x automation rules)."""
+    addr = '0x' + rpc_call(TOKEN, '0x6352211e' + format(i, '064x'))[-40:]
+    names = st.setdefault('names', {})
+    if addr not in names:
+        name = None
+        try:
+            key = os.environ.get('OPENSEA_API_KEY')
+            if key:
+                d = json.load(urllib.request.urlopen(urllib.request.Request(f'https://api.opensea.io/api/v2/accounts/{addr}', headers={'X-API-KEY': key, **UA}), timeout=15))
+                name = d.get('username')
+        except Exception:
+            pass
+        if not name:
+            try:
+                name = json.load(urllib.request.urlopen(urllib.request.Request(f'https://api.ensideas.com/ens/resolve/{addr}', headers=UA), timeout=15)).get('name')
+            except Exception:
+                pass
+        name = (name or '').replace('@', '').strip()[:30]
+        names[addr] = name or f'{addr[:6]}…{addr[-4:]}'
+    return names[addr]
+
 def meta(i):
     """token json once the render has landed, else None"""
     j = json.load(urllib.request.urlopen(urllib.request.Request(f'https://resolver.abx.io/t/{CHAIN}/{TOKEN}/{i}', headers=UA), timeout=20))
@@ -254,7 +277,8 @@ def run(st, c):
         if sent >= MAX_PINGS: break
         pct = '2%' if r['mode'] == 'mono' else '6%'
         publish(f"nhm: rare pull #{r['i']} ({r['mode']}) .. post it",
-                f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n{BYLINE}\n\n" + ' · '.join(r['bits'][1:]) + f"\n{MINT}\n\n{SIG}",
+                f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n{BYLINE}\n\n" + ' · '.join(r['bits'][1:])
+                + f"\nminted by {minter(st, r['i'])}\n{MINT}\n\n{SIG}",
                 [r['img']] if r.get('img') else [], link=True)
         q.remove(r)
     size = 4 if X_ON else ROUNDUP_N      # x takes at most 4 images a post
@@ -262,12 +286,14 @@ def run(st, c):
     while q and sent < MAX_PINGS and (len(q) >= size or now - min(x['t'] for x in q) >= wait):
         batch = q[:size]
         tail = f"wave {n} · {sold_in}/{WAVE} · {eth(BASE_PRICE + STEP * (n - 1))} eth · mint link in bio\n\n{SIG}"
+        who = list(dict.fromkeys(minter(st, b['i']) for b in batch))   # unique, in order
+        by = f"minted by {who[0]}" if len(who) == 1 else (f"minted by {who[0]} and {who[1]}" if len(who) == 2 else f"minted by {len(who)} collectors")
         if len(batch) == 1:
             b = batch[0]
-            text = f"just minted .. #{b['i']}\n{BYLINE}\n\n" + ' · '.join(b['bits']) + f"\n{tail}"
+            text = f"just minted .. #{b['i']}\n{BYLINE}\n\n" + ' · '.join(b['bits']) + f"\n{by}\n{tail}"
         else:
             text = (f"just minted .. " + ', '.join(f"#{b['i']}" for b in batch) + f"\n{BYLINE}\n\n"
-                    + ' · '.join(f"#{b['i']} {b['bits'][0]}" for b in batch) + f"\n{tail}")
+                    + ' · '.join(f"#{b['i']} {b['bits'][0]}" for b in batch) + f"\n{by}\n{tail}")
         publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
                 [b['img'] for b in batch if b.get('img')])   # a main post, so it shows on the profile timeline
         del q[:len(batch)]
