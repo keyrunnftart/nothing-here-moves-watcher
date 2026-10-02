@@ -3,5 +3,6 @@
  "waves": {},
  "announced": {},
  "reminded": {},
- "queue": []
+ "queue": [],
+ "refresh": []
 }
