@@ -14,5 +14,35 @@
  "xids": {
   "1:open": "2106028813788299664"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/14/image"
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/14/image",
+ "minted": {
+  "8": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/8/image"
+  },
+  "9": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/9/image"
+  },
+  "10": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/10/image"
+  },
+  "11": {
+   "mode": "grid",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/11/image"
+  },
+  "12": {
+   "mode": "swarm",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/12/image"
+  },
+  "13": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/13/image"
+  },
+  "14": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/14/image"
+  }
+ }
 }
