@@ -1,5 +1,5 @@
 {
- "next": 12,
+ "next": 15,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144
@@ -10,9 +10,22 @@
  },
  "reminded": {},
  "queue": [],
- "refresh": [],
+ "refresh": [
+  {
+   "i": 12,
+   "left": 11
+  },
+  {
+   "i": 13,
+   "left": 11
+  },
+  {
+   "i": 14,
+   "left": 11
+  }
+ ],
  "xids": {
   "1:open": "2106028813788299664"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/11/image"
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/14/image"
 }
