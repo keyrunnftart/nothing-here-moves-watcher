@@ -1,5 +1,5 @@
 {
- "next": 15,
+ "next": 16,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144
@@ -14,7 +14,7 @@
  "xids": {
   "1:open": "2106028813788299664"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/14/image",
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/15/image",
  "minted": {
   "8": {
    "mode": "collage",
@@ -43,6 +43,13 @@
   "14": {
    "mode": "collage",
    "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/14/image"
+  },
+  "15": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/15/image"
   }
+ },
+ "names": {
+  "0xe01596dfb6722f6cd1f6e46af246f2f683e9dd4d": "hot_ryley-o"
  }
 }
