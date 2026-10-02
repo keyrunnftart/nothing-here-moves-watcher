@@ -29,6 +29,9 @@ OS_ITEM = f'opensea.io/item/base/{TOKEN}/'
 OS_COLL = 'opensea.io/collection/nothing-here-moves'
 ROUNDUP_N, ROUNDUP_WAIT = 5, 30 * 60
 BYLINE = '"nothing here moves" by keyrun'
+SCHEDULED = [
+    {'key': 'us-evening-1', 'at': 1790990100},   # sat 3 oct 2026 06:45 ist = fri 18:15 pt
+]
 SIG = '[automated message · keybot]'
 MAX_PINGS = 4                    # per run, so a burst can't flood the phone
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -234,6 +237,7 @@ def run(st, c):
         hero = tr.get('Hero', 'None')
         bits = [tr.get('Mode', '').lower()] + ([hero.lower()] if hero != 'None' else []) + [tr.get('Palette', '').lower(), tr.get('Drift Strength', '').lower() + ' drift']
         st['queue'].append({'i': i, 'mode': bits[0], 'bits': [b for b in bits if b], 't': now, 'img': j.get('image')})
+        st['minted'][str(i)] = {'mode': bits[0], 'img': j.get('image')}
         st['last_img'] = j.get('image')
         st['refresh'].append({'i': i, 'left': 12})
         st['next'] = i + 1
@@ -267,6 +271,22 @@ def run(st, c):
         publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
                 [b['img'] for b in batch if b.get('img')])   # a main post, so it shows on the profile timeline
         del q[:len(batch)]
+
+    # one-off scheduled posts with live numbers (sent once, only within 3h of their time so a late run never posts stale)
+    if n and not closed:
+        for sp in SCHEDULED:
+            if sp['key'] in ann or not (sp['at'] <= now < sp['at'] + 3 * 3600) or sent >= MAX_PINGS: continue
+            modes = [m['mode'] for k, m in st['minted'].items() if int(k) >= RESERVES]
+            rare = {r: modes.count(r) for r in ('void', 'mono') if modes.count(r)}
+            rline = ('no void or mono pulled yet' if not rare else
+                     ' and '.join(f"{c} {r}" for r, c in rare.items()) + ' found so far')
+            imgs = [st['minted'][k]['img'] for k in sorted(st['minted'], key=int)[-4:] if st['minted'][k].get('img')]
+            text = (f"wave {n} of nothing here moves · {sold_in}/{WAVE} minted\n{BYLINE}\n\n"
+                    f"a still image. zero frames of animation. it still moves.\n"
+                    f"each one is generated on-chain at mint .. {rline}\n"
+                    f"{WAVE - sold_in} left at {eth(BASE_PRICE + STEP * (n - 1))} eth\n{MINT}\n\n{SIG}")
+            if publish(f"nhm: {sp['key']} .. post it", text, imgs, link=True) or not X_ON:
+                ann[sp['key']] = now
     return n, sold_in
 
 if __name__ == '__main__':
@@ -276,6 +296,14 @@ if __name__ == '__main__':
     st.setdefault('queue', [])
     st.setdefault('refresh', [])
     st.setdefault('xids', {})
+    if 'minted' not in st:   # backfill what was minted before this field existed
+        st['minted'] = {}
+        for i in range(RESERVES, st['next']):
+            try:
+                j = meta(i)
+                if j: st['minted'][str(i)] = {'mode': next((a['value'] for a in j.get('attributes', []) if a['trait_type'] == 'Mode'), '').lower(), 'img': j.get('image')}
+            except Exception as e:
+                print(f'backfill #{i}: {e}')
     if '--test-post' in sys.argv:
         # one real post to check the x keys (delete it afterwards); touches no state
         print('x keys:', 'all 4 set' if X_ON else 'MISSING ' + ', '.join(k for k, v in XK.items() if not v))
