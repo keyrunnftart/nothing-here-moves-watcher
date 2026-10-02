@@ -244,16 +244,15 @@ def run(st, c):
                  f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n\n" + ' · '.join(r['bits'][1:]) + f"\n{OS_ITEM}{r['i']}")
         q.remove(r)
     size = 4 if X_ON else ROUNDUP_N      # x takes at most 4 images a post
-    while q and sent < MAX_PINGS and (len(q) >= size or now - min(x['t'] for x in q) >= ROUNDUP_WAIT):
+    wait = 0 if X_ON else ROUNDUP_WAIT   # auto-posting: every new mint goes out on the next run (≤5-10 min)
+    while q and sent < MAX_PINGS and (len(q) >= size or now - min(x['t'] for x in q) >= wait):
         batch = q[:size]
         if len(batch) == 1:
             b = batch[0]; text = f"just minted .. #{b['i']} · " + ' · '.join(b['bits']) + f"\n{OS_ITEM}{b['i']}"
         else:
             text = 'just minted\n' + '\n'.join(f"#{b['i']} · {b['bits'][0]}" for b in batch) + f"\n\n{MINT}\n{OS_ITEM}{batch[-1]['i']}"
-        # on x: a reply in that wave's thread, with the artworks attached
-        wv = (batch[0]['i'] - RESERVES) // WAVE + 1
         publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
-                [b['img'] for b in batch if b.get('img')], reply_to=st['xids'].get(f'{wv}:open'))
+                [b['img'] for b in batch if b.get('img')])   # a main post, so it shows on the profile timeline
         del q[:len(batch)]
     return n, sold_in
 
