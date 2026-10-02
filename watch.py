@@ -4,6 +4,8 @@
 #   - x posts ready to go (tap → x opens with the text written → post): wave open, 10/30, 20/30, sold out,
 #     rare pulls (mono/void), round-ups of 5 mints (or whatever waited 30 min), edition closed
 #   - reminders when an owner tx is due: open the next wave (24h after a sellout), close (72h without one)
+# it also asks opensea to refresh each new mint's metadata (render landed + once more a run later), so the
+# collection page doesn't sit on the pink placeholder.  env: OPENSEA_API_KEY (secret).
 # it never signs anything .. the owner tx still runs on the laptop (node wave.mjs waves.mainnet.json open-next|close).
 # stdlib only.  env: NTFY_TOPIC (secret).  local test: python watch.py --dry
 import os, sys, json, time, urllib.request
@@ -70,6 +72,16 @@ def ping(title, text, click=None, urgent=False):
     h = {'Title': title.encode('utf-8'), 'Priority': 'urgent' if urgent else 'high', 'Tags': 'rotating_light' if urgent else 'bird'}
     if click: h['Click'] = click
     urllib.request.urlopen(urllib.request.Request(f'https://ntfy.sh/{topic}', data=text.encode('utf-8'), headers={**h, **UA}), timeout=15)
+
+def os_refresh(i):
+    key = os.environ.get('OPENSEA_API_KEY')
+    if DRY or not key: print(f'[opensea] refresh #{i} (skipped)'); return True
+    try:
+        url = f'https://api.opensea.io/api/v2/chain/base/contract/{TOKEN}/nfts/{i}/refresh'
+        urllib.request.urlopen(urllib.request.Request(url, method='POST', data=b'', headers={'X-API-KEY': key, **UA}), timeout=20)
+        print(f'[opensea] refreshed #{i}'); return True
+    except Exception as e:
+        print(f'[opensea] refresh #{i} failed: {e}'); return False
 
 def tap_post(title, text):
     ping(title, text + '\n\n(tap → x opens with this post ready)', 'https://x.com/intent/post?text=' + quote(text, safe=''))
@@ -144,8 +156,13 @@ def run(st, c):
         hero = tr.get('Hero', 'None')
         bits = [tr.get('Mode', '').lower()] + ([hero.lower()] if hero != 'None' else []) + [tr.get('Palette', '').lower(), tr.get('Drift Strength', '').lower() + ' drift']
         st['queue'].append({'i': i, 'mode': bits[0], 'bits': [b for b in bits if b], 't': now})
+        st['refresh'].append({'i': i, 'left': 2})
         st['next'] = i + 1
         print(f'new #{i} {bits[0]}')
+    # opensea refresh: now (render just landed) and once more on the next run, when their indexer has caught up
+    for r in list(st['refresh'])[:20]:
+        if os_refresh(r['i']): r['left'] -= 1
+        if r['left'] <= 0: st['refresh'].remove(r)
     q = st['queue']
     for r in [x for x in q if x['mode'] in ('mono', 'void')]:
         if sent >= MAX_PINGS: break
@@ -168,6 +185,7 @@ if __name__ == '__main__':
     st.setdefault('next', RESERVES)          # the reserves #0-7 are history, never posted
     for k in ('waves', 'announced', 'reminded'): st.setdefault(k, {})
     st.setdefault('queue', [])
+    st.setdefault('refresh', [])
     c = chain()
     n, sold_in = run(st, c)
     # printed only (not saved) so a quiet run leaves state.json unchanged and makes no commit
