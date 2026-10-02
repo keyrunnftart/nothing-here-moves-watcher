@@ -193,7 +193,8 @@ def run(st, c):
     for k in range(1, n + 1):   # one open post per wave (also catches up if a run was missed)
         price = BASE_PRICE + STEP * (k - 1)
         post_once(f'{k}:open', f'nhm: wave {k} is open .. post it',
-                  f"wave {k} is open\n\n{WAVE} editions · {eth(price)} eth · on base\neach one is generated on-chain at mint .. nobody sees it before it lands\n{MINT}")
+                  f"wave {k} is open\n\n{WAVE} editions · {eth(price)} eth · on base\neach one is generated on-chain at mint .. nobody sees it before it lands\n{MINT}",
+                  link=True, img=False)
     if n:
         for m in (10, 20):
             if m <= sold_in < WAVE: post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it', f"wave {n} · {sold_in}/{WAVE} minted\n\n{MINT}")
