@@ -1,7 +1,7 @@
 name: watch
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '3-59/10 * * * *'   # off the busy :00 marks
   workflow_dispatch:
     inputs:
       test_post:
