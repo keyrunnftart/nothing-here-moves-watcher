@@ -73,6 +73,16 @@ def ping(title, text, click=None, urgent=False):
     if click: h['Click'] = click
     urllib.request.urlopen(urllib.request.Request(f'https://ntfy.sh/{topic}', data=text.encode('utf-8'), headers={**h, **UA}), timeout=15)
 
+def os_ok(i):
+    """True once opensea shows the token with its traits (i.e. it has the real metadata, not the placeholder)"""
+    key = os.environ.get('OPENSEA_API_KEY')
+    try:
+        url = f'https://api.opensea.io/api/v2/chain/base/contract/{TOKEN}/nfts/{i}'
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'X-API-KEY': key, **UA}), timeout=20))['nft']
+        return bool(d.get('traits')) and bool(d.get('display_image_url') or d.get('image_url'))
+    except Exception:
+        return False
+
 def os_refresh(i):
     key = os.environ.get('OPENSEA_API_KEY')
     if DRY or not key: print(f'[opensea] refresh #{i} (skipped)'); return True
@@ -216,12 +226,15 @@ def run(st, c):
         bits = [tr.get('Mode', '').lower()] + ([hero.lower()] if hero != 'None' else []) + [tr.get('Palette', '').lower(), tr.get('Drift Strength', '').lower() + ' drift']
         st['queue'].append({'i': i, 'mode': bits[0], 'bits': [b for b in bits if b], 't': now, 'img': j.get('image')})
         st['last_img'] = j.get('image')
-        st['refresh'].append({'i': i, 'left': 2})
+        st['refresh'].append({'i': i, 'left': 12})
         st['next'] = i + 1
         print(f'new #{i} {bits[0]}')
-    # opensea refresh: now (render just landed) and once more on the next run, when their indexer has caught up
-    for r in list(st['refresh'])[:20]:
-        if os_refresh(r['i']): r['left'] -= 1
+    # opensea: keep asking for a refresh every run until opensea shows the traits (max 12 runs ≈ 2h)
+    for r in list(st['refresh'])[:30]:
+        if not DRY and os.environ.get('OPENSEA_API_KEY') and os_ok(r['i']):
+            print(f"[opensea] #{r['i']} ok"); st['refresh'].remove(r); continue
+        os_refresh(r['i'])
+        r['left'] = r.get('left', 12) - 1
         if r['left'] <= 0: st['refresh'].remove(r)
     q = st['queue']
     for r in [x for x in q if x['mode'] in ('mono', 'void')]:
