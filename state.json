@@ -4,5 +4,6 @@
  "announced": {},
  "reminded": {},
  "queue": [],
- "refresh": []
+ "refresh": [],
+ "xids": {}
 }
