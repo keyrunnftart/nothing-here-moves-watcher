@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
+    inputs:
+      test_post:
+        description: 'post one test to x (check the keys), then stop'
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -12,20 +17,32 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      OPENSEA_API_KEY: ${{ secrets.OPENSEA_API_KEY }}
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python watch.py
-        env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - name: test post
+        if: ${{ inputs.test_post }}
+        run: python watch.py --test-post
+      - name: watch
+        if: ${{ !inputs.test_post }}
+        run: python watch.py
       - name: save state
+        if: ${{ !inputs.test_post }}
         run: |
           git add state.json
           if ! git diff --cached --quiet; then
             git config user.name "nhm-watcher"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "state"
+            git pull --rebase -q
             git push
           fi

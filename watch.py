@@ -86,6 +86,61 @@ def os_refresh(i):
 def tap_post(title, text):
     ping(title, text + '\n\n(tap → x opens with this post ready)', 'https://x.com/intent/post?text=' + quote(text, safe=''))
 
+# ---------------- x api (oauth 1.0a user context, stdlib) ----------------
+# pay-per-use: $0.015 a post, $0.20 if it contains a link .. so only "wave n is open" carries the mint link;
+# everything else goes out with the artwork image and no link.
+import hmac, hashlib, base64, secrets as _secrets, urllib.error
+XK = {k: os.environ.get(k, '').strip() for k in ('X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_SECRET')}
+X_ON = all(XK.values())
+
+def _oauth(method, url):
+    enc = lambda x: quote(str(x), safe='~')
+    p = {'oauth_consumer_key': XK['X_API_KEY'], 'oauth_nonce': _secrets.token_hex(16), 'oauth_signature_method': 'HMAC-SHA1',
+         'oauth_timestamp': str(int(time.time())), 'oauth_token': XK['X_ACCESS_TOKEN'], 'oauth_version': '1.0'}
+    base = '&'.join([method, enc(url), enc('&'.join(f'{enc(k)}={enc(v)}' for k, v in sorted(p.items())))])
+    key = enc(XK['X_API_SECRET']) + '&' + enc(XK['X_ACCESS_SECRET'])
+    p['oauth_signature'] = base64.b64encode(hmac.new(key.encode(), base.encode(), hashlib.sha1).digest()).decode()
+    return 'OAuth ' + ', '.join(f'{enc(k)}="{enc(v)}"' for k, v in sorted(p.items()))
+
+def _x(method, url, data=None, ctype=None):
+    h = {'Authorization': _oauth(method, url), **UA}
+    if ctype: h['content-type'] = ctype
+    try:
+        return json.load(urllib.request.urlopen(urllib.request.Request(url, data=data, method=method, headers=h), timeout=60))
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f'x {e.code}: {e.read()[:300]!r}')
+
+def x_upload(img_url):
+    img = urllib.request.urlopen(urllib.request.Request(img_url, headers=UA), timeout=30).read()
+    b = '----nhm' + _secrets.token_hex(8)
+    body = (f'--{b}\r\nContent-Disposition: form-data; name="media_category"\r\n\r\ntweet_image\r\n'
+            f'--{b}\r\nContent-Disposition: form-data; name="media"; filename="nhm.png"\r\nContent-Type: image/png\r\n\r\n').encode() + img + f'\r\n--{b}--\r\n'.encode()
+    r = _x('POST', 'https://api.x.com/2/media/upload', body, f'multipart/form-data; boundary={b}')
+    return (r.get('data') or {}).get('id') or r.get('media_id_string')
+
+def x_post(text, images=(), reply_to=None):
+    body = {'text': text}
+    ids = [m for m in (x_upload(u) for u in list(images)[:4]) if m]
+    if ids: body['media'] = {'media_ids': ids}
+    if reply_to: body['reply'] = {'in_reply_to_tweet_id': str(reply_to)}
+    return _x('POST', 'https://api.x.com/2/tweets', json.dumps(body).encode(), 'application/json')['data']['id']
+
+def publish(title, text, images=(), link=False, reply_to=None):
+    """auto-post on x when the keys are there (link lines dropped unless link=True), else a one-tap ping. returns the post id or None"""
+    global sent
+    if not X_ON or DRY:
+        tap_post(title, text); return None
+    if not link:
+        text = '\n'.join(l for l in text.split('\n') if 'keyrunnft.art' not in l and 'opensea.io' not in l).strip()
+    try:
+        pid = x_post(text, images, reply_to)
+        sent += 1
+        print(f'[x] posted {pid} | ' + text.replace('\n', ' / '))
+        return pid
+    except Exception as e:
+        print(f'[x] failed: {e} .. falling back to a one-tap ping')
+        tap_post(title + ' (auto-post failed)', text); return None
+
 def eth(x): return ('%.4f' % x).rstrip('0').rstrip('.')
 def dur(sec):
     m = int(max(0, sec) // 60); h, m = divmod(m, 60)
@@ -126,9 +181,12 @@ def run(st, c):
                 remind(f'close:{n}', 3, 'nhm: close is due', f'wave {n} did not sell out in {WINDOW_H}h ({sold_in}/{WAVE}).\non the laptop: node wave.mjs waves.mainnet.json close')
 
     # x posts
-    def post_once(key, title, text):
+    xid = st['xids']
+    def post_once(key, title, text, link=False, img=True):
         if key not in ann and sent < MAX_PINGS:
-            tap_post(title, text); ann[key] = now
+            pid = publish(title, text, [st['last_img']] if img and st.get('last_img') else [], link=link)
+            ann[key] = now
+            if pid: xid[key] = pid
     if closed:
         post_once('closed', 'nhm: edition closed .. post it',
                   f"nothing here moves is closed at {c['supply']} editions\n\nthank you to everyone who minted .. the edition is final\n{OS_COLL}")
@@ -155,7 +213,8 @@ def run(st, c):
         tr = {a['trait_type']: a['value'] for a in j.get('attributes', [])}
         hero = tr.get('Hero', 'None')
         bits = [tr.get('Mode', '').lower()] + ([hero.lower()] if hero != 'None' else []) + [tr.get('Palette', '').lower(), tr.get('Drift Strength', '').lower() + ' drift']
-        st['queue'].append({'i': i, 'mode': bits[0], 'bits': [b for b in bits if b], 't': now})
+        st['queue'].append({'i': i, 'mode': bits[0], 'bits': [b for b in bits if b], 't': now, 'img': j.get('image')})
+        st['last_img'] = j.get('image')
         st['refresh'].append({'i': i, 'left': 2})
         st['next'] = i + 1
         print(f'new #{i} {bits[0]}')
@@ -167,16 +226,20 @@ def run(st, c):
     for r in [x for x in q if x['mode'] in ('mono', 'void')]:
         if sent >= MAX_PINGS: break
         pct = '2%' if r['mode'] == 'mono' else '6%'
-        tap_post(f"nhm: rare pull #{r['i']} ({r['mode']}) .. post it",
+        publish(f"nhm: rare pull #{r['i']} ({r['mode']}) .. post it",
                  f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n\n" + ' · '.join(r['bits'][1:]) + f"\n{OS_ITEM}{r['i']}")
         q.remove(r)
-    while q and sent < MAX_PINGS and (len(q) >= ROUNDUP_N or now - min(x['t'] for x in q) >= ROUNDUP_WAIT):
-        batch = q[:ROUNDUP_N]
+    size = 4 if X_ON else ROUNDUP_N      # x takes at most 4 images a post
+    while q and sent < MAX_PINGS and (len(q) >= size or now - min(x['t'] for x in q) >= ROUNDUP_WAIT):
+        batch = q[:size]
         if len(batch) == 1:
             b = batch[0]; text = f"just minted .. #{b['i']} · " + ' · '.join(b['bits']) + f"\n{OS_ITEM}{b['i']}"
         else:
             text = 'just minted\n' + '\n'.join(f"#{b['i']} · {b['bits'][0]}" for b in batch) + f"\n\n{MINT}\n{OS_ITEM}{batch[-1]['i']}"
-        tap_post(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text)
+        # on x: a reply in that wave's thread, with the artworks attached
+        wv = (batch[0]['i'] - RESERVES) // WAVE + 1
+        publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
+                [b['img'] for b in batch if b.get('img')], reply_to=st['xids'].get(f'{wv}:open'))
         del q[:len(batch)]
     return n, sold_in
 
@@ -186,6 +249,13 @@ if __name__ == '__main__':
     for k in ('waves', 'announced', 'reminded'): st.setdefault(k, {})
     st.setdefault('queue', [])
     st.setdefault('refresh', [])
+    st.setdefault('xids', {})
+    if '--test-post' in sys.argv:
+        # one real post to check the x keys (delete it afterwards); touches no state
+        print('x keys:', 'all 4 set' if X_ON else 'MISSING ' + ', '.join(k for k, v in XK.items() if not v))
+        pid = x_post('test .. checking an automation, ignore (will be deleted)', [f'https://resolver.abx.io/t/{CHAIN}/{TOKEN}/2/image'])
+        print(f'[x] test posted: https://x.com/keyrunnftart/status/{pid}')
+        sys.exit(0)
     c = chain()
     n, sold_in = run(st, c)
     # printed only (not saved) so a quiet run leaves state.json unchanged and makes no commit
