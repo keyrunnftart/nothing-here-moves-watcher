@@ -1,5 +1,5 @@
 {
- "next": 17,
+ "next": 18,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144
@@ -7,15 +7,22 @@
  },
  "announced": {
   "1:open": 1790951371.268144,
-  "us-evening-1": 1790990127.1761918
+  "us-evening-1": 1790990127.1761918,
+  "1:10": 1791004224.2547011
  },
  "reminded": {},
  "queue": [],
- "refresh": [],
+ "refresh": [
+  {
+   "i": 17,
+   "left": 11
+  }
+ ],
  "xids": {
-  "1:open": "2106028813788299664"
+  "1:open": "2106028813788299664",
+  "1:10": "2106250497657065615"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/16/image",
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/17/image",
  "minted": {
   "8": {
    "mode": "collage",
@@ -52,10 +59,15 @@
   "16": {
    "mode": "monolith",
    "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/16/image"
+  },
+  "17": {
+   "mode": "swarm",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/17/image"
   }
  },
  "names": {
   "0xe01596dfb6722f6cd1f6e46af246f2f683e9dd4d": "hot_ryley-o",
-  "0xb7ea1f23d9956c5f7335285834aa02f2e663ba94": "Tater"
+  "0xb7ea1f23d9956c5f7335285834aa02f2e663ba94": "Tater",
+  "0x7e6d4810ea233d7588e3675d704571e29c4bcbba": "radixart.eth"
  }
 }
