@@ -148,11 +148,14 @@ def _x(method, url, data=None, ctype=None):
     except urllib.error.HTTPError as e:
         raise RuntimeError(f'x {e.code}: {e.read()[:300]!r}')
 
-def x_upload(img_url):
-    img = urllib.request.urlopen(urllib.request.Request(img_url, headers=UA), timeout=30).read()
+def x_upload(img):
+    """img = an image url (resolver png) or jpeg bytes (a milestone card)"""
+    raw = isinstance(img, bytes)
+    if not raw: img = urllib.request.urlopen(urllib.request.Request(img, headers=UA), timeout=30).read()
+    name, ctype = ('nhm.jpg', 'image/jpeg') if raw else ('nhm.png', 'image/png')
     b = '----nhm' + _secrets.token_hex(8)
     body = (f'--{b}\r\nContent-Disposition: form-data; name="media_category"\r\n\r\ntweet_image\r\n'
-            f'--{b}\r\nContent-Disposition: form-data; name="media"; filename="nhm.png"\r\nContent-Type: image/png\r\n\r\n').encode() + img + f'\r\n--{b}--\r\n'.encode()
+            f'--{b}\r\nContent-Disposition: form-data; name="media"; filename="{name}"\r\nContent-Type: {ctype}\r\n\r\n').encode() + img + f'\r\n--{b}--\r\n'.encode()
     r = _x('POST', 'https://api.x.com/2/media/upload', body, f'multipart/form-data; boundary={b}')
     return (r.get('data') or {}).get('id') or r.get('media_id_string')
 
@@ -232,39 +235,6 @@ def run(st, c):
             if left <= 0:
                 remind(f'close:{n}', 3, 'nhm: close is due', f'wave {n} did not sell out in {WINDOW_H}h ({sold_in}/{WAVE}).\non the laptop: node wave.mjs waves.mainnet.json close')
 
-    # x posts
-    xid = st['xids']
-    def post_once(key, title, text, link=False, img=True):
-        if key not in ann and sent < MAX_PINGS:
-            pid = publish(title, text, [st['last_img']] if img and st.get('last_img') else [], link=link)
-            ann[key] = now
-            if pid: xid[key] = pid
-    # wordings agreed with the artist 2 oct 2026: line 1 = what happened, byline, details, sign-off.
-    # links ($0.20 a post) only on wave open, 10/30, 20/30, sold out, rare pulls and the close.
-    if closed:
-        post_once('closed', 'nhm: edition closed .. post it',
-                  f"nothing here moves is closed at {c['supply']} editions\n{BYLINE}\n\nthank you to everyone who minted .. secondary on opensea\n{OS_COLL}\n\n{SIG}",
-                  link=True)
-    for k in range(1, n + 1):   # one open post per wave (also catches up if a run was missed)
-        price = BASE_PRICE + STEP * (k - 1)
-        post_once(f'{k}:open', f'nhm: wave {k} is open .. post it',
-                  f"wave {k} is open\n{BYLINE}\n\n{WAVE} editions · {eth(price)} eth · on base\ngenerated on-chain at mint .. nobody sees it before it lands\n{MINT}\n\n{SIG}",
-                  link=True, img=False)
-    if n:
-        price = BASE_PRICE + STEP * (n - 1)
-        for m in (10, 20):
-            if m <= sold_in < WAVE:
-                post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it',
-                          f"wave {n} · {sold_in}/{WAVE} minted\n{BYLINE}\n\n{WAVE - sold_in} left at {eth(price)} eth\n{MINT}\n\n{SIG}", link=True)
-        if w.get('soldOutAt'):
-            took = dur(w['soldOutAt'] - w['openedAt'])
-            if c['supply'] >= c['max']:
-                text = f"wave {n} sold out in {took} .. that was the last one, the edition is complete\n{BYLINE}\n\nthank you .. secondary on opensea\n{OS_COLL}\n\n{SIG}"
-            else:
-                text = (f"wave {n} sold out in {took} .. thank you\n{BYLINE}\n\n"
-                        f"wave {n + 1} opens {when(w['soldOutAt'] + BREAK_H * 3600)} · {eth(BASE_PRICE + STEP * n)} eth\n{MINT}\n\n{SIG}")
-            post_once(f'{n}:sold', f'nhm: wave {n} sold out .. post it', text, link=True)
-
     # new mints → queue (in order; stop at the first render that hasn't landed yet)
     while st['next'] < c['supply']:
         i = st['next']
@@ -279,6 +249,58 @@ def run(st, c):
         st['refresh'].append({'i': i, 'left': 12})
         st['next'] = i + 1
         print(f'new #{i} {bits[0]}')
+
+    # x posts
+    xid = st['xids']
+    pending = st['next'] < c['supply']   # a render hasn't landed yet .. card posts wait a run so the grid is complete
+    def post_once(key, title, text, link=False, img=True, card_fn=None):
+        if key not in ann and sent < MAX_PINGS:
+            imgs = card_fn() if card_fn else None
+            if not imgs: imgs = [st['last_img']] if img and st.get('last_img') else []
+            pid = publish(title, text, imgs, link=link)
+            ann[key] = now
+            if pid: xid[key] = pid
+    def mcard(ids, headline, sub, footer, left='MINT.KEYRUNNFT.ART'):
+        """milestone card (one jpeg, art grid) .. None on any failure, so the post falls back to the last mint image"""
+        try:
+            import card
+            tiles = [(i, st['minted'][str(i)]['mode'], st['minted'][str(i)]['img']) for i in ids if st['minted'].get(str(i), {}).get('img')]
+            return [card.card(tiles, headline, sub, footer, left)] if tiles else None
+        except Exception as e:
+            print(f'[card] failed: {e}'); return None
+    public = sorted(int(k) for k in st['minted'] if int(k) >= RESERVES)
+    # wordings agreed with the artist 2 oct 2026: line 1 = what happened, byline, details, sign-off.
+    # links ($0.20 a post) only on wave open, 10/30, 20/30, sold out, rare pulls and the close.
+    # cards (approved 3 oct 2026): 10/20 = latest 4 mints 2x2; sold out = the whole wave; closed = every public mint (≤60).
+    if closed and not pending:
+        post_once('closed', 'nhm: edition closed .. post it',
+                  f"nothing here moves is closed at {c['supply']} editions\n{BYLINE}\n\nthank you to everyone who minted .. secondary on opensea\n{OS_COLL}\n\n{SIG}",
+                  link=True, card_fn=lambda: mcard(public[-60:], f"CLOSED AT {c['supply']}", f'{len(public)} MINTED IN PUBLIC', 'ON BASE', 'SECONDARY ON OPENSEA'))
+    for k in range(1, n + 1):   # one open post per wave (also catches up if a run was missed)
+        price = BASE_PRICE + STEP * (k - 1)
+        post_once(f'{k}:open', f'nhm: wave {k} is open .. post it',
+                  f"wave {k} is open\n{BYLINE}\n\n{WAVE} editions · {eth(price)} eth · on base\ngenerated on-chain at mint .. nobody sees it before it lands\n{MINT}\n\n{SIG}",
+                  link=True, img=False)
+    if n and not pending:
+        price = BASE_PRICE + STEP * (n - 1)
+        for m in (10, 20):
+            if m <= sold_in < WAVE:
+                post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it',
+                          f"wave {n} · {sold_in}/{WAVE} minted\n{BYLINE}\n\n{WAVE - sold_in} left at {eth(price)} eth\n{MINT}\n\n{SIG}", link=True,
+                          card_fn=lambda: mcard(public[-4:], f'WAVE {n} · {sold_in}/{WAVE}', f'MINTED  ·  {WAVE - sold_in} LEFT', f'{eth(price)} ETH  ·  ON BASE'))
+        if w.get('soldOutAt'):
+            took = dur(w['soldOutAt'] - w['openedAt'])
+            wave_ids = [i for i in public if (i - RESERVES) // WAVE == n - 1]
+            if c['supply'] >= c['max']:
+                text = f"wave {n} sold out in {took} .. that was the last one, the edition is complete\n{BYLINE}\n\nthank you .. secondary on opensea\n{OS_COLL}\n\n{SIG}"
+                fn = lambda: mcard(wave_ids, f'WAVE {n} · SOLD OUT', f'{WAVE} / {WAVE} IN {took.upper()}', 'EDITION COMPLETE', 'SECONDARY ON OPENSEA')
+            else:
+                text = (f"wave {n} sold out in {took} .. thank you\n{BYLINE}\n\n"
+                        f"wave {n + 1} opens {when(w['soldOutAt'] + BREAK_H * 3600)} · {eth(BASE_PRICE + STEP * n)} eth\n{MINT}\n\n{SIG}")
+                nxt = when(w['soldOutAt'] + BREAK_H * 3600).split(',')[0].upper()
+                fn = lambda: mcard(wave_ids, f'WAVE {n} · SOLD OUT', f'{WAVE} / {WAVE} IN {took.upper()}', f'WAVE {n + 1}  ·  {eth(BASE_PRICE + STEP * n)} ETH  ·  {nxt}')
+            post_once(f'{n}:sold', f'nhm: wave {n} sold out .. post it', text, link=True, card_fn=fn)
+
     # opensea: keep asking for a refresh every run until opensea shows the traits (max 12 runs ≈ 2h)
     for r in list(st['refresh'])[:30]:
         if not DRY and os.environ.get('OPENSEA_API_KEY') and os_ok(r['i']):

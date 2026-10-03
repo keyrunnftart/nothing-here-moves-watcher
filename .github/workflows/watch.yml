@@ -29,6 +29,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: pillow (milestone cards)
+        run: pip install -q pillow
       - name: test post
         if: ${{ inputs.test_post }}
         run: python watch.py --test-post
