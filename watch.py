@@ -272,34 +272,11 @@ def run(st, c):
     # wordings agreed with the artist 2 oct 2026: line 1 = what happened, byline, details, sign-off.
     # links ($0.20 a post) only on wave open, 10/30, 20/30, sold out, rare pulls and the close.
     # cards (approved 3 oct 2026): 10/20 = latest 4 mints 2x2; sold out = the whole wave; closed = every public mint (≤60).
-    if closed and not pending:
-        post_once('closed', 'nhm: edition closed .. post it',
-                  f"nothing here moves is closed at {c['supply']} editions\n{BYLINE}\n\nthank you to everyone who minted .. secondary on opensea\n{OS_COLL}\n\n{SIG}",
-                  link=True, card_fn=lambda: mcard(public[-60:], f"CLOSED AT {c['supply']}", f'{len(public)} MINTED IN PUBLIC', 'ON BASE', 'SECONDARY ON OPENSEA'))
     for k in range(1, n + 1):   # one open post per wave (also catches up if a run was missed)
         price = BASE_PRICE + STEP * (k - 1)
         post_once(f'{k}:open', f'nhm: wave {k} is open .. post it',
                   f"wave {k} is open\n{BYLINE}\n\n{WAVE} editions · {eth(price)} eth · on base\ngenerated on-chain at mint .. nobody sees it before it lands\n{MINT}\n\n{SIG}",
                   link=True, img=False)
-    if n and not pending:
-        price = BASE_PRICE + STEP * (n - 1)
-        for m in (10, 20):
-            if m <= sold_in < WAVE:
-                post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it',
-                          f"wave {n} · {sold_in}/{WAVE} minted\n{BYLINE}\n\n{WAVE - sold_in} left at {eth(price)} eth\n{MINT}\n\n{SIG}", link=True,
-                          card_fn=lambda: mcard(public[-4:], f'WAVE {n} · {sold_in}/{WAVE}', f'MINTED  ·  {WAVE - sold_in} LEFT', f'{eth(price)} ETH  ·  ON BASE'))
-        if w.get('soldOutAt'):
-            took = dur(w['soldOutAt'] - w['openedAt'])
-            wave_ids = [i for i in public if (i - RESERVES) // WAVE == n - 1]
-            if c['supply'] >= c['max']:
-                text = f"wave {n} sold out in {took} .. that was the last one, the edition is complete\n{BYLINE}\n\nthank you .. secondary on opensea\n{OS_COLL}\n\n{SIG}"
-                fn = lambda: mcard(wave_ids, f'WAVE {n} · SOLD OUT', f'{WAVE} / {WAVE} IN {took.upper()}', 'EDITION COMPLETE', 'SECONDARY ON OPENSEA')
-            else:
-                text = (f"wave {n} sold out in {took} .. thank you\n{BYLINE}\n\n"
-                        f"wave {n + 1} opens {when(w['soldOutAt'] + BREAK_H * 3600)} · {eth(BASE_PRICE + STEP * n)} eth\n{MINT}\n\n{SIG}")
-                nxt = when(w['soldOutAt'] + BREAK_H * 3600).split(',')[0].upper()
-                fn = lambda: mcard(wave_ids, f'WAVE {n} · SOLD OUT', f'{WAVE} / {WAVE} IN {took.upper()}', f'WAVE {n + 1}  ·  {eth(BASE_PRICE + STEP * n)} ETH  ·  {nxt}')
-            post_once(f'{n}:sold', f'nhm: wave {n} sold out .. post it', text, link=True, card_fn=fn)
 
     # opensea: keep asking for a refresh every run until opensea shows the traits (max 12 runs ≈ 2h)
     for r in list(st['refresh'])[:30]:
@@ -333,6 +310,31 @@ def run(st, c):
         publish(f"nhm: {len(batch)} new mint{'s' if len(batch) > 1 else ''} .. post it", text,
                 [b['img'] for b in batch if b.get('img')])   # a main post, so it shows on the profile timeline
         del q[:len(batch)]
+
+    # milestones after the mint posts, so "10/30" lands after the mint that made it 10 (and waits if mints are still queued)
+    if closed and not pending and not q:
+        post_once('closed', 'nhm: edition closed .. post it',
+                  f"nothing here moves is closed at {c['supply']} editions\n{BYLINE}\n\nthank you to everyone who minted .. secondary on opensea\n{OS_COLL}\n\n{SIG}",
+                  link=True, card_fn=lambda: mcard(public[-60:], f"CLOSED AT {c['supply']}", f'{len(public)} MINTED IN PUBLIC', 'ON BASE', 'SECONDARY ON OPENSEA'))
+    if n and not pending and not q:
+        price = BASE_PRICE + STEP * (n - 1)
+        for m in (10, 20):
+            if m <= sold_in < WAVE:
+                post_once(f'{n}:{m}', f'nhm: wave {n} at {sold_in}/{WAVE} .. post it',
+                          f"wave {n} · {sold_in}/{WAVE} minted\n{BYLINE}\n\n{WAVE - sold_in} left at {eth(price)} eth\n{MINT}\n\n{SIG}", link=True,
+                          card_fn=lambda: mcard(public[-4:], f'WAVE {n} · {sold_in}/{WAVE}', f'MINTED  ·  {WAVE - sold_in} LEFT', f'{eth(price)} ETH  ·  ON BASE'))
+        if w.get('soldOutAt'):
+            took = dur(w['soldOutAt'] - w['openedAt'])
+            wave_ids = [i for i in public if (i - RESERVES) // WAVE == n - 1]
+            if c['supply'] >= c['max']:
+                text = f"wave {n} sold out in {took} .. that was the last one, the edition is complete\n{BYLINE}\n\nthank you .. secondary on opensea\n{OS_COLL}\n\n{SIG}"
+                fn = lambda: mcard(wave_ids, f'WAVE {n} · SOLD OUT', f'{WAVE} / {WAVE} IN {took.upper()}', 'EDITION COMPLETE', 'SECONDARY ON OPENSEA')
+            else:
+                text = (f"wave {n} sold out in {took} .. thank you\n{BYLINE}\n\n"
+                        f"wave {n + 1} opens {when(w['soldOutAt'] + BREAK_H * 3600)} · {eth(BASE_PRICE + STEP * n)} eth\n{MINT}\n\n{SIG}")
+                nxt = when(w['soldOutAt'] + BREAK_H * 3600).split(',')[0].upper()
+                fn = lambda: mcard(wave_ids, f'WAVE {n} · SOLD OUT', f'{WAVE} / {WAVE} IN {took.upper()}', f'WAVE {n + 1}  ·  {eth(BASE_PRICE + STEP * n)} ETH  ·  {nxt}')
+            post_once(f'{n}:sold', f'nhm: wave {n} sold out .. post it', text, link=True, card_fn=fn)
 
     # one-off scheduled posts with live numbers (sent once, only within 3h of their time so a late run never posts stale)
     if n and not closed:
