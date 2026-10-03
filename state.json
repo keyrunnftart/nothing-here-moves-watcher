@@ -1,5 +1,5 @@
 {
- "next": 20,
+ "next": 32,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144
@@ -11,13 +11,122 @@
   "1:10": 1791004224.2547011
  },
  "reminded": {},
- "queue": [],
- "refresh": [],
+ "queue": [
+  {
+   "i": 27,
+   "mode": "collage",
+   "bits": [
+    "collage",
+    "tunnel",
+    "crimson ice / flame sky",
+    "steady drift"
+   ],
+   "t": 1791046230.2545002,
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/27/image"
+  },
+  {
+   "i": 28,
+   "mode": "monolith",
+   "bits": [
+    "monolith",
+    "tunnel",
+    "flame sky / navy peach",
+    "steady drift"
+   ],
+   "t": 1791046230.2545002,
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/28/image"
+  },
+  {
+   "i": 29,
+   "mode": "collage",
+   "bits": [
+    "collage",
+    "rotating snakes",
+    "flame sky / magenta mint",
+    "steady drift"
+   ],
+   "t": 1791046230.2545002,
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/29/image"
+  },
+  {
+   "i": 30,
+   "mode": "collage",
+   "bits": [
+    "collage",
+    "rotating snakes",
+    "flame sky / teal rose",
+    "strong drift"
+   ],
+   "t": 1791046230.2545002,
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/30/image"
+  },
+  {
+   "i": 31,
+   "mode": "grid",
+   "bits": [
+    "grid",
+    "violet lime / navy peach",
+    "faint drift"
+   ],
+   "t": 1791046230.2545002,
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/31/image"
+  }
+ ],
+ "refresh": [
+  {
+   "i": 20,
+   "left": 11
+  },
+  {
+   "i": 21,
+   "left": 11
+  },
+  {
+   "i": 22,
+   "left": 11
+  },
+  {
+   "i": 23,
+   "left": 11
+  },
+  {
+   "i": 24,
+   "left": 11
+  },
+  {
+   "i": 25,
+   "left": 11
+  },
+  {
+   "i": 26,
+   "left": 11
+  },
+  {
+   "i": 27,
+   "left": 11
+  },
+  {
+   "i": 28,
+   "left": 11
+  },
+  {
+   "i": 29,
+   "left": 11
+  },
+  {
+   "i": 30,
+   "left": 11
+  },
+  {
+   "i": 31,
+   "left": 11
+  }
+ ],
  "xids": {
   "1:open": "2106028813788299664",
   "1:10": "2106250497657065615"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/19/image",
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/31/image",
  "minted": {
   "8": {
    "mode": "collage",
@@ -66,6 +175,54 @@
   "19": {
    "mode": "collage",
    "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/19/image"
+  },
+  "20": {
+   "mode": "grid",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/20/image"
+  },
+  "21": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/21/image"
+  },
+  "22": {
+   "mode": "void",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/22/image"
+  },
+  "23": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/23/image"
+  },
+  "24": {
+   "mode": "void",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/24/image"
+  },
+  "25": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/25/image"
+  },
+  "26": {
+   "mode": "void",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/26/image"
+  },
+  "27": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/27/image"
+  },
+  "28": {
+   "mode": "monolith",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/28/image"
+  },
+  "29": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/29/image"
+  },
+  "30": {
+   "mode": "collage",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/30/image"
+  },
+  "31": {
+   "mode": "grid",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/31/image"
   }
  },
  "names": {
@@ -75,5 +232,5 @@
   "0xafc093b1c8419f05d4de6ff54d38121c0d733752": "mint_DEFSTALKR",
   "0x76f1212240b61f5dce4e5b0956c7dbceeef18032": "Sushumna"
  },
- "sale_pinged": 20
+ "sale_pinged": 32
 }
