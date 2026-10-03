@@ -91,13 +91,13 @@ def meta(i):
 
 # ---------------- phone ----------------
 sent = 0
-def ping(title, text, click=None, urgent=False):
+def ping(title, text, click=None, urgent=False, tags=None, budget=True):
     global sent
-    sent += 1
+    if budget: sent += 1
     print(f'[ping] {title} | ' + text.replace('\n', ' / '))
     topic = os.environ.get('NTFY_TOPIC')
     if DRY or not topic: return
-    h = {'Title': title.encode('utf-8'), 'Priority': 'urgent' if urgent else 'high', 'Tags': 'rotating_light' if urgent else 'bird'}
+    h = {'Title': title.encode('utf-8'), 'Priority': 'urgent' if urgent else 'high', 'Tags': tags or ('rotating_light' if urgent else 'bird')}
     if click: h['Click'] = click
     urllib.request.urlopen(urllib.request.Request(f'https://ntfy.sh/{topic}', data=text.encode('utf-8'), headers={**h, **UA}), timeout=15)
 
@@ -197,6 +197,20 @@ def run(st, c):
     sold_in = c['sold'] - (n - 1) * WAVE if n else 0
     if w and sold_in >= WAVE and not w.get('soldOutAt'): w['soldOutAt'] = now
     closed = n > 0 and c['paused'] and c['supply'] >= c['max']
+
+    # sale pings: one phone notification per run for new mints, straight from totalSupply (doesn't wait for
+    # the render, doesn't use the x/ping budget). first run sets the baseline, so older mints aren't replayed.
+    seen = st.setdefault('sale_pinged', c['supply'])
+    if c['supply'] > seen:
+        ids = list(range(seen, c['supply']))
+        try: who = list(dict.fromkeys(minter(st, i) for i in ids))
+        except Exception: who = []
+        title = f"nhm: sold #{ids[0]}" if len(ids) == 1 else f"nhm: {len(ids)} sold (#{ids[0]}–#{ids[-1]})"
+        text = (f"{'minted by ' + ', '.join(who) if who else 'new mint'}\n"
+                f"wave {n} · {sold_in}/{WAVE} · +{eth(c['price'] * len(ids))} eth\n{c['supply']}/{c['max']} minted")
+        try: ping(title, text, click='https://' + OS_ITEM + str(ids[-1]), tags='moneybag', budget=False)
+        except Exception as e: print(f'[ping] sale ping failed: {e}')
+        st['sale_pinged'] = c['supply']
 
     # owner-tx reminders (no x post, just the nudge)
     def remind(key, every_h, title, text):
