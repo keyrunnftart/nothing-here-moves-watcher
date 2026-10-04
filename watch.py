@@ -275,7 +275,7 @@ def run(st, c):
     for k in range(1, n + 1):   # one open post per wave (also catches up if a run was missed)
         price = BASE_PRICE + STEP * (k - 1)
         post_once(f'{k}:open', f'nhm: wave {k} is open .. post it',
-                  f"wave {k} is open\n{BYLINE}\n\n{WAVE} editions · {eth(price)} eth · on base\ngenerated on-chain at mint .. nobody sees it before it lands\n{MINT}\n\n{SIG}",
+                  f"wave {k} is open\n{BYLINE}\n\n{WAVE} editions · {eth(price)} eth · on base\ngenerated on-chain at mint .. nobody sees it before it lands\nvoid/mono pull → 8k file · 6+ mints → a 1/1 that moves\n{MINT}\n\n{SIG}",
                   link=True, img=False)
 
     # opensea: keep asking for a refresh every run until opensea shows the traits (max 12 runs ≈ 2h)
@@ -291,7 +291,7 @@ def run(st, c):
         pct = '2%' if r['mode'] == 'mono' else '6%'
         publish(f"nhm: rare pull #{r['i']} ({r['mode']}) .. post it",
                 f"rare pull .. #{r['i']} is {r['mode']} ({pct} of outputs)\n{BYLINE}\n\n" + ' · '.join(r['bits'][1:])
-                + f"\nminted by {minter(st, r['i'])}\n{MINT}\n\n{SIG}",
+                + f"\nminted by {minter(st, r['i'])}\n8k print file for the minter → {MINT}/claim\n\n{SIG}",
                 [r['img']] if r.get('img') else [], link=True)
         q.remove(r)
     size = 4 if X_ON else ROUNDUP_N      # x takes at most 4 images a post
