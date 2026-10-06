@@ -1,5 +1,5 @@
 {
- "next": 39,
+ "next": 40,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144,
@@ -21,7 +21,12 @@
   "open:2": 1791214248.4440196
  },
  "queue": [],
- "refresh": [],
+ "refresh": [
+  {
+   "i": 39,
+   "left": 11
+  }
+ ],
  "xids": {
   "1:open": "2106028813788299664",
   "1:10": "2106250497657065615",
@@ -29,7 +34,7 @@
   "1:sold": "2106770235558650155",
   "2:open": "2107132546098098267"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/38/image",
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/39/image",
  "minted": {
   "8": {
    "mode": "collage",
@@ -154,6 +159,10 @@
   "38": {
    "mode": "collage",
    "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/38/image"
+  },
+  "39": {
+   "mode": "monolith",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/39/image"
   }
  },
  "names": {
@@ -163,7 +172,8 @@
   "0xafc093b1c8419f05d4de6ff54d38121c0d733752": "mint_DEFSTALKR",
   "0x76f1212240b61f5dce4e5b0956c7dbceeef18032": "Sushumna",
   "0x5e3099d5524b56fc5943f1ebac7ccee9973ff582": "0x5e30\u2026f582",
-  "0xa7fdf17a7cb225e62d0423c7d0b78400f4d02888": "mattetre.eth"
+  "0xa7fdf17a7cb225e62d0423c7d0b78400f4d02888": "mattetre.eth",
+  "0x1423d7ba74817a2617fa3e69b609a54e4daf6f79": "wildalps_II"
  },
- "sale_pinged": 39
+ "sale_pinged": 40
 }
