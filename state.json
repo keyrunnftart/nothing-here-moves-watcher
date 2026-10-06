@@ -1,5 +1,5 @@
 {
- "next": 41,
+ "next": 42,
  "waves": {
   "1": {
    "openedAt": 1790951371.268144,
@@ -21,7 +21,12 @@
   "open:2": 1791214248.4440196
  },
  "queue": [],
- "refresh": [],
+ "refresh": [
+  {
+   "i": 41,
+   "left": 11
+  }
+ ],
  "xids": {
   "1:open": "2106028813788299664",
   "1:10": "2106250497657065615",
@@ -29,7 +34,7 @@
   "1:sold": "2106770235558650155",
   "2:open": "2107132546098098267"
  },
- "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/40/image",
+ "last_img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/41/image",
  "minted": {
   "8": {
    "mode": "collage",
@@ -162,6 +167,10 @@
   "40": {
    "mode": "collage",
    "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/40/image"
+  },
+  "41": {
+   "mode": "monolith",
+   "img": "https://resolver.abx.io/t/8453/0xb13971551bd3c14a0f793571347ddcdfb08902ba/41/image"
   }
  },
  "names": {
@@ -173,7 +182,8 @@
   "0x5e3099d5524b56fc5943f1ebac7ccee9973ff582": "0x5e30\u2026f582",
   "0xa7fdf17a7cb225e62d0423c7d0b78400f4d02888": "mattetre.eth",
   "0x1423d7ba74817a2617fa3e69b609a54e4daf6f79": "wildalps_II",
-  "0x764abe778aa96cd04972444a8e1db83df13f7e66": "Raptornews"
+  "0x764abe778aa96cd04972444a8e1db83df13f7e66": "Raptornews",
+  "0xc69c1c8e1a6e030256068d0434a4801bf8b06f4b": "Lime-"
  },
- "sale_pinged": 41
+ "sale_pinged": 42
 }
