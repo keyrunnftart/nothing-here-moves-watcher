@@ -1,0 +1,49 @@
+name: atoms-pixels-bids
+on:
+  schedule:
+    - cron: '45 14 17 11 *'   # 17 Nov 14:45 UTC, 15 min before the 4pm CET listing (github may start it a few min late; it catches up from the chain)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'run = watch + post, dry = watch + print only (one poll), whoami = which x account the keys post as'
+        type: choice
+        options: [run, dry, whoami]
+        default: run
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: atoms-pixels-bids
+  cancel-in-progress: false
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+      RUN_MIN: '345'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: whoami
+        if: ${{ inputs.mode == 'whoami' }}
+        run: python sr_bids.py --whoami
+      - name: dry poll
+        if: ${{ inputs.mode == 'dry' }}
+        env:
+          DRY: '1'
+        run: python sr_bids.py --once
+      - name: watch
+        id: watch
+        if: ${{ inputs.mode == 'run' || github.event_name == 'schedule' }}
+        run: python sr_bids.py
+      - name: hand over to the next run (a job may only run ~6 h)
+        if: ${{ (inputs.mode == 'run' || github.event_name == 'schedule') && steps.watch.outputs.all_done != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run sr_bids.yml -f mode=run
