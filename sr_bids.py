@@ -95,6 +95,17 @@ def post(text, st):
         print('[dry] would post:\n' + text + '\n'); return
     r = _x('POST', 'https://api.x.com/2/tweets', json.dumps({'text': text, 'reply': {'in_reply_to_tweet_id': PARENT}}).encode())
     st['posted'].append(r['data']['id']); print('[x] posted', r['data']['id'], '|', text.replace('\n', ' / ')); save(st)
+    ping(text, r['data']['id'])
+
+def ping(text, tid):                       # phone push to keyrun (x never notifies you of your own posts)
+    topic = os.environ.get('NTFY_TOPIC')
+    if not topic: return
+    try:
+        body = text.replace(HEAD, '').replace('\n' + SIGN, '')
+        h = {'Title': 'Atoms & Pixels .. keybot', 'Priority': 'high', 'Tags': 'candle', 'Click': f'https://x.com/keyrunnftart/status/{tid}', **UA}
+        urllib.request.urlopen(urllib.request.Request(f'https://ntfy.sh/{topic}', data=body.encode('utf-8'), headers=h), timeout=15)
+    except Exception as e:
+        print('[ntfy] failed', e)
 
 # ---------------- texts (approved by keyrun, 16 Nov 2026) ----------------
 def eth(x): return ('%.4f' % x).rstrip('0').rstrip('.')

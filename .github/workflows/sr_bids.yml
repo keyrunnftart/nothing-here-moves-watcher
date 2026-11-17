@@ -24,6 +24,7 @@ jobs:
       X_API_SECRET: ${{ secrets.X_API_SECRET }}
       X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
       X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       RUN_MIN: '345'
     steps:
       - uses: actions/checkout@v4
