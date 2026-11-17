@@ -21,6 +21,7 @@ T_BID = '0x189a468e632a450afd491f84aa9ae94addc6813c7e309a7b1b1223f88802a77d'
 EXTEND = 900                               # a bid in the last 15 min moves the end to bid + 15 min
 RPCS = ['https://ethereum-rpc.publicnode.com', 'https://gateway.tenderly.co/public/mainnet', 'https://rpc.mevblocker.io', 'https://ethereum.publicnode.com']
 SIGN = '[automated message · keybot]'
+HEAD = "'Atoms & Pixels' on SuperRare w/ @wildalps\n"
 UA = {'User-Agent': 'atoms-pixels-watcher/1.0'}
 DRY = os.environ.get('DRY') == '1'
 STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sr_state.json')
@@ -97,12 +98,12 @@ def post(text, st):
 
 # ---------------- texts (approved by keyrun, 16 Nov 2026) ----------------
 def eth(x): return ('%.4f' % x).rstrip('0').rstrip('.')
-def t_first(nm, b): return f'{nm} just got its first light 🕯️\nReserve met at {eth(b["amount"])} ETH by {who(b["wallet"])} .. the 24h auction has started.\nEvery bid becomes a light and stays in the art.\n{SIGN}'
-def t_bid(nm, b, n): return f'{nm} has a new light .. {n} lights now.\n{who(b["wallet"])} bid {eth(b["amount"])} ETH.\n{SIGN}'
-def t_hour(nm, a): return f'{nm} .. 1 hour left.\nCurrent bid {eth(a["amount"])} ETH by {who(a["wallet"])}, {a["n"]} lights in the art.\n{SIGN}'
-def t_late(nm, b, mins): return f'A late bid on {nm} .. {eth(b["amount"])} ETH by {who(b["wallet"])}.\nThe clock moved back, {mins} min left.\n{SIGN}'
-def t_sold(nm, a): return f'{nm} is sold for {eth(a["amount"])} ETH to {who(a["wallet"])} 🙏\n{a["n"]} lights stay in it forever .. every bidder is part of its creation.\n{SIGN}'
-def t_all(A): return (f'All three are home ✨\nVortex {eth(A["1"]["amount"])} · Heat Map {eth(A["2"]["amount"])} · Golden Lake {eth(A["3"]["amount"])} ETH\n'
+def t_first(nm, b): return HEAD + f'{nm} just got its first light 🕯️\nReserve met at {eth(b["amount"])} ETH by {who(b["wallet"])} .. the 24h auction has started.\nEvery bid becomes a light and stays in the art.\n{SIGN}'
+def t_bid(nm, b, n): return HEAD + f'{nm} has a new light .. {n} lights now.\n{who(b["wallet"])} bid {eth(b["amount"])} ETH.\n{SIGN}'
+def t_hour(nm, a): return HEAD + f'{nm} .. 1 hour left.\nCurrent bid {eth(a["amount"])} ETH by {who(a["wallet"])}, {a["n"]} lights in the art.\n{SIGN}'
+def t_late(nm, b, mins): return HEAD + f'A late bid on {nm} .. {eth(b["amount"])} ETH by {who(b["wallet"])}.\nThe clock moved back, {mins} min left.\n{SIGN}'
+def t_sold(nm, a): return HEAD + f'{nm} is sold for {eth(a["amount"])} ETH to {who(a["wallet"])} 🙏\n{a["n"]} lights stay in it forever .. every bidder is part of its creation.\n{SIGN}'
+def t_all(A): return (HEAD + f'All three are home ✨\nVortex {eth(A["1"]["amount"])} · Heat Map {eth(A["2"]["amount"])} · Golden Lake {eth(A["3"]["amount"])} ETH\n'
                       f'Thank you to every bidder .. your lights live in the art now.\n@wildalps x @keyrun\n{SIGN}')
 
 # ---------------- state ----------------
