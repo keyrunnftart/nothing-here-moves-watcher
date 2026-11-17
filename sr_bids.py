@@ -21,7 +21,7 @@ T_BID = '0x189a468e632a450afd491f84aa9ae94addc6813c7e309a7b1b1223f88802a77d'
 EXTEND = 900                               # a bid in the last 15 min moves the end to bid + 15 min
 RPCS = ['https://ethereum-rpc.publicnode.com', 'https://gateway.tenderly.co/public/mainnet', 'https://rpc.mevblocker.io', 'https://ethereum.publicnode.com']
 SIGN = '[automated message · keybot]'
-HEAD = "'Atoms & Pixels' on SuperRare w/ @wildalps\n"
+HEAD = "'Atoms & Pixels' on SuperRare .. @wildalps x @keyrunnftart\n"
 UA = {'User-Agent': 'atoms-pixels-watcher/1.0'}
 DRY = os.environ.get('DRY') == '1'
 STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sr_state.json')
